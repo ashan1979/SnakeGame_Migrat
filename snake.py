@@ -1,3 +1,5 @@
+import pygame
+import numpy as np # New
 from tkinter import *
 import random
 import ctypes
@@ -43,7 +45,20 @@ SNAKE_COLOR = "#22FF00"
 FOOD_COLOR = "#FF3131"
 BACKGROUND_COLOR = "#1A1A1A"
 
+# -- INITIALIZE AUDIO --
+pygame.mixer.init(frequency=44100, size=16, channels=1)
 
+def play_sound(type):
+    sample_rate = 44100
+    if type == "eat":
+        freq, duration = 880, 0.1 # High-pitched 'pip'
+    else:
+        freq, duration = 220, 0.4 # Low-pitched 'thud'
+
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    wave = (np.sin(2 * np.pi * freq * t) * 32767).astype(np.int16)
+    sound = pygame.sndarray.make_sound(wave)
+    sound.play()
 
 class Snake:
     def __init__(self):
@@ -95,6 +110,7 @@ def next_turn(snake, food):
         canvas.itemconfig(snake.squares[1], fill=SNAKE_COLOR)
 
     if x == food.coordinates[0] and y == food.coordinates[1]:
+        play_sound("eat")
         global score
         score += 1
 
@@ -148,6 +164,7 @@ def toggle_pause():
         canvas.create_text(GAME_WIDTH/2, GAME_HEIGHT/2, text="PAUSED", fill="white", font=("consolas", 50), tag="paused_text")
 
 def check_collisions(snake):
+    play_sound("die")
     x, y = snake.coordinates[0]
 
     if x < 0 or x >= GAME_WIDTH or y < 0 or y >= GAME_HEIGHT:
