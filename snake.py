@@ -56,11 +56,11 @@ def play_sound(type):
         freq, duration = 220, 0.4 # Low-pitched 'thud'
 
     t = np.linspace(0, duration, int(sample_rate * duration), False)
-    wave = (np.square(2 * np.pi * freq * t) * 32767).astype(np.int16)
+    wave = (np.sin(2 * np.pi * freq * t) * 32767).astype(np.int16)
     sound = pygame.sndarray.make_sound(wave)
 
     # -- ADD VOLUME CONTROL --
-    sound.set_volume(0.2) # Set Volume to 20% (can be adjusted here)
+    sound.set_volume(0.1) # Set Volume to 20% (can be adjusted here)
     # ------------------------
     sound.play()
 
