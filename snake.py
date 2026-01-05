@@ -56,8 +56,12 @@ def play_sound(type):
         freq, duration = 220, 0.4 # Low-pitched 'thud'
 
     t = np.linspace(0, duration, int(sample_rate * duration), False)
-    wave = (np.sin(2 * np.pi * freq * t) * 32767).astype(np.int16)
+    wave = (np.square(2 * np.pi * freq * t) * 32767).astype(np.int16)
     sound = pygame.sndarray.make_sound(wave)
+
+    # -- ADD VOLUME CONTROL --
+    sound.set_volume(0.2) # Set Volume to 20% (can be adjusted here)
+    # ------------------------
     sound.play()
 
 class Snake:
@@ -131,6 +135,7 @@ def next_turn(snake, food):
         canvas.delete(snake.squares[-1])
         del snake.squares[-1]
     if check_collisions(snake):
+        play_sound("die")
         save_high_scores(score)
         game_over()
     else:
@@ -164,7 +169,6 @@ def toggle_pause():
         canvas.create_text(GAME_WIDTH/2, GAME_HEIGHT/2, text="PAUSED", fill="white", font=("consolas", 50), tag="paused_text")
 
 def check_collisions(snake):
-    play_sound("die")
     x, y = snake.coordinates[0]
 
     if x < 0 or x >= GAME_WIDTH or y < 0 or y >= GAME_HEIGHT:
