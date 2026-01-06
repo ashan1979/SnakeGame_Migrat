@@ -3,8 +3,10 @@ import numpy as np # New
 from tkinter import *
 import random
 import ctypes
-
 import platform
+import os
+
+
 def dark_title_bar(window):
     if platform.system() != "Windows":
         return # Skip this if we are on Linux Mint
@@ -44,25 +46,29 @@ BODY_PARTS = 3
 SNAKE_COLOR = "#22FF00"
 FOOD_COLOR = "#FF3131"
 BACKGROUND_COLOR = "#1A1A1A"
+GOLD_COLOR = "#FFD700"
 
 # -- INITIALIZE AUDIO --
-pygame.mixer.init(frequency=44100, size=16, channels=1)
+pygame.mixer.init()
+#Load reaper recordings
+#Ensure the sound files are in the same folder as the script!
+eat_sound = pygame.mixer.Sound("eat.wav")
+die_sound = pygame.mixer.Sound("collision.wav")
+gold_sound = pygame.mixer.Sound("gold_apple.wav")
 
-def play_sound(type):
-    sample_rate = 44100
-    if type == "eat":
-        freq, duration = 880, 0.1 # High-pitched 'pip'
-    else:
-        freq, duration = 220, 0.4 # Low-pitched 'thud'
+# -- Initialize music
+pygame.mixer.music.load("background.wav")
 
-    t = np.linspace(0, duration, int(sample_rate * duration), False)
-    wave = (np.sin(2 * np.pi * freq * t) * 32767).astype(np.int16)
-    sound = pygame.sndarray.make_sound(wave)
+#Set volume levels(0.0 to 1.0)
+eat_sound.set_volume(0.3)
+die_sound.set_volume(0.1)
+gold_sound.set_volume(0.5)
+pygame.mixer.music.set_volume(0.07)
+pygame.mixer.music.play(-1)
 
-    # -- ADD VOLUME CONTROL --
-    sound.set_volume(0.1) # Set Volume to 20% (can be adjusted here)
-    # ------------------------
-    sound.play()
+def play_sound(sound_type):
+    if sound_type == "die":
+        die_sound.play()
 
 class Snake:
     def __init__(self):
@@ -82,10 +88,15 @@ class Food:
 
         x = random.randint(0, (GAME_WIDTH // SPACE_SIZE)-1) * SPACE_SIZE
         y = random.randint(0, (GAME_HEIGHT // SPACE_SIZE) - 1) * SPACE_SIZE
-
         self.coordinates = [x, y]
 
-        canvas.create_oval(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=FOOD_COLOR, tag="food")
+        # 10% chance to be a Golden Apple
+        self.is_gold = random.random() < 0.10
+
+        # Select color based on type
+        color = GOLD_COLOR if self.is_gold else FOOD_COLOR
+
+        canvas.create_oval(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=color, tag="food")
 
 
 def next_turn(snake, food):
@@ -114,9 +125,13 @@ def next_turn(snake, food):
         canvas.itemconfig(snake.squares[1], fill=SNAKE_COLOR)
 
     if x == food.coordinates[0] and y == food.coordinates[1]:
-        play_sound("eat")
-        global score
-        score += 1
+        #check to see if it was golden apple
+        if food.is_gold:
+            gold_sound.play()
+            score += 5
+        else:
+            eat_sound.play()
+            score += 1
 
         # -- Live High Score Update
         current_high = get_high_score()
@@ -180,6 +195,8 @@ def check_collisions(snake):
     return False
 
 def game_over():
+    pygame.mixer.music.stop() #stop immediately on collision
+
     canvas.delete(ALL)
     canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2, font=('consolas', 40), text="GAME OVER", fill="red", tag="gameover")
     canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2 + 50, font=('consolas', 20), text="press SPACE to Restart", fill="white", tag="gameover")
@@ -193,6 +210,8 @@ def restart_game():
     score = 0
     current_speed = INITIAL_SPEED
     direction = "down"
+
+    pygame.mixer.music.play(-1) #resume music on restart
 
 
     score_text = canvas.create_text(10, 10, anchor="nw", text="Score: 0", fill="white", font=("consolas", 20))
