@@ -136,6 +136,7 @@ def next_turn(snake, food):
         # -- Live High Score Update
         current_high = get_high_score()
         if score > current_high:
+            save_high_scores(score)
             canvas.itemconfig("h_score", text=f"high: {score}")
 
         #-- DIFFICULTY SCALING
