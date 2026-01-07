@@ -39,10 +39,11 @@ def save_high_scores(new_score):
     if new_score > high_score:
         with open("highscore.txt", "w") as file:
             file.write(str(new_score))
-
+        high_score_label.config(text=f"high Score: {new_score}")
 #--- CONSTANTS ---
 GAME_WIDTH = 800
 GAME_HEIGHT = 800
+PANEL_HEIGHT = 60
 INITIAL_SPEED = 150
 MIN_SPEED = 50
 SPEED_INCREMENT = 3
@@ -52,7 +53,7 @@ SNAKE_COLOR = "#22FF00"
 FOOD_COLOR = "#FF3131"
 BACKGROUND_COLOR = "#1A1A1A"
 GOLD_COLOR = "#FFD700"
-
+PANEL_COLOR = "#262626"
 # -- INITIALIZE AUDIO --
 pygame.mixer.init()
 #Load reaper recordings
@@ -152,11 +153,11 @@ def next_turn(snake, food):
         current_high = get_high_score()
         if score > current_high:
             save_high_scores(score)
-            canvas.itemconfig("h_score", text=f"high: {score}")
+            save_high_scores(score)
         if current_speed > MIN_SPEED:
             current_speed -= SPEED_INCREMENT
 
-        canvas.itemconfig(score_text, text="Score: {}".format(score))
+        score_label.config(text=f"Score: {score}")
         canvas.delete("food")
         food = Food() # Spawns the next one!
 
@@ -213,8 +214,8 @@ def game_over():
     pygame.mixer.music.stop() #stop immediately on collision
 
     canvas.delete(ALL)
-    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2, font=('consolas', 40), text="GAME OVER", fill="red", tag="gameover")
-    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2 + 50, font=('consolas', 20), text="press SPACE to Restart", fill="white", tag="gameover")
+    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2 - 50, font=('consolas', 40), text="GAME OVER", fill="red", tag="gameover")
+    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2 + 100, font=('consolas', 20), text="press SPACE to Restart", fill="white", tag="gameover")
     window.bind('<space>', lambda event: restart_game())
 
 def restart_game():
@@ -229,18 +230,28 @@ def restart_game():
     pygame.mixer.music.play(-1) #resume music on restart
 
 
-    score_text = canvas.create_text(10, 10, anchor="nw", text="Score: 0", fill="white", font=("consolas", 20))
+    score_label.config(text=f"Score: 0")
     current_high = get_high_score()
-    canvas.create_text(GAME_WIDTH - 1, 10, anchor="ne", text=f"High: {current_high}", fill="yellow", font=("consolas", 20), tag="h_score")
+    high_score_label.config(text=f"High Score: {get_high_score()}")
     snake = Snake()
     food = Food()
     next_turn(snake, food)
-
+# --- UI SETUP ---
 window = Tk()
 dark_title_bar(window)
 window.title("Snake Game")
 window.resizable(False, False)
 window.configure(bg=BACKGROUND_COLOR)
+
+# -- TOP PANEL
+score_panel = Frame(window, bg=PANEL_COLOR, height=PANEL_HEIGHT)
+score_panel.pack(fill="x")
+
+score_label = Label(score_panel, text="Score: 0", font=("consolas", 20), bg=PANEL_COLOR, fg="white")
+score_label.pack(side="left", padx=30)
+
+high_score_label = Label(score_panel, text=f"High Score: {get_high_score()}", font=("consolas", 20), bg=PANEL_COLOR, fg="yellow")
+high_score_label.pack(side="right", padx=30)
 
 # -- GAME STATE GLOBALS
 score = 0
@@ -250,17 +261,14 @@ direction_changed = False
 paused = False
 
 
-
+# -- GAME CANVAS --
 canvas = Canvas(window, bg=BACKGROUND_COLOR,
                 width=GAME_WIDTH, height=GAME_HEIGHT,
                 highlightthickness=3,
                 highlightbackground="#333333") # Dark gray border
-canvas.pack(padx=20, pady=20)
+canvas.pack()
 
-score_text = canvas.create_text(10, 10, anchor="nw", text="Score: 0", fill="white", font=("consolas", 20))
-high_score_val = get_high_score()
-canvas.create_text(GAME_WIDTH - 10, 10, anchor="ne", text=f"High: {get_high_score()}", fill="yellow", font=("consolas", 20), tag="h_score")
-
+# -- WINDOW CENTERING --
 window.update()
 window_width = window.winfo_width()
 window_height = window.winfo_height()
