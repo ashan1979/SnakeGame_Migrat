@@ -5,6 +5,11 @@ import random
 import ctypes
 import platform
 import os
+# Create a helper function
+def get_path(filename):
+    # This finds the absolute path to the folder where your script is
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, filename)
 
 
 def dark_title_bar(window):
@@ -52,18 +57,18 @@ GOLD_COLOR = "#FFD700"
 pygame.mixer.init()
 #Load reaper recordings
 #Ensure the sound files are in the same folder as the script!
-eat_sound = pygame.mixer.Sound("eat.wav")
-die_sound = pygame.mixer.Sound("collision.wav")
-gold_sound = pygame.mixer.Sound("gold_apple.wav")
+eat_sound = pygame.mixer.Sound(get_path("eat.wav"))
+die_sound = pygame.mixer.Sound(get_path("collision.wav"))
+gold_sound = pygame.mixer.Sound(get_path("gold_apple.wav"))
 
 # -- Initialize music
-pygame.mixer.music.load("background.wav")
+pygame.mixer.music.load(get_path("background.wav"))
 
 #Set volume levels(0.0 to 1.0)
-eat_sound.set_volume(0.3)
-die_sound.set_volume(0.1)
-gold_sound.set_volume(0.5)
-pygame.mixer.music.set_volume(0.07)
+eat_sound.set_volume(0.5)
+die_sound.set_volume(0.3)
+gold_sound.set_volume(0.7)
+pygame.mixer.music.set_volume(0.2)
 pygame.mixer.music.play(-1)
 
 def play_sound(sound_type):
@@ -75,6 +80,7 @@ class Snake:
         self.body_size = BODY_PARTS
         self.coordinates = []
         self.squares = []
+        self.is_gold_mode = False # Track if we are glowing
 
         for i in range(0, BODY_PARTS):
             self.coordinates.append([0, 0])
@@ -118,34 +124,42 @@ def next_turn(snake, food):
 
     snake.coordinates.insert(0, [x, y])
 
-    square = canvas.create_rectangle(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill="#00FBFF", outline="#116600")
+    # --- UPDATED! Set head color based on gold mode --
+    head_color = GOLD_COLOR if snake.is_gold_mode else "#00FBFF"
+    square = canvas.create_rectangle(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=head_color, outline="#116600")
     snake.squares.insert(0, square)
 
+    # -- UPDATE! Set body color based on gold mode --
+    body_color = GOLD_COLOR if snake.is_gold_mode else SNAKE_COLOR
     if len(snake.squares) > 1:
-        canvas.itemconfig(snake.squares[1], fill=SNAKE_COLOR)
+        canvas.itemconfig(snake.squares[1], fill=body_color)
 
     if x == food.coordinates[0] and y == food.coordinates[1]:
-        #check to see if it was golden apple
         if food.is_gold:
             gold_sound.play()
             score += 5
+            snake.is_gold_mode = True # NEW: activate gold mode
         else:
             eat_sound.play()
             score += 1
+            snake.is_gold_mode = False # NEW: Reset gold more
 
-        # -- Live High Score Update
+        # NEW: Immediately update the entire snake's color to the new state
+        new_color = GOLD_COLOR if snake.is_gold_mode else SNAKE_COLOR
+        for segment in snake.squares:
+            canvas.itemconfig(segment, fill=new_color)
+
         current_high = get_high_score()
         if score > current_high:
             save_high_scores(score)
             canvas.itemconfig("h_score", text=f"high: {score}")
-
-        #-- DIFFICULTY SCALING
         if current_speed > MIN_SPEED:
             current_speed -= SPEED_INCREMENT
 
         canvas.itemconfig(score_text, text="Score: {}".format(score))
         canvas.delete("food")
-        food = Food()
+        food = Food() # Spawns the next one!
+
     else:
         del snake.coordinates[-1]
         canvas.delete(snake.squares[-1])
