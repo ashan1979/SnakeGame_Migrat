@@ -105,6 +105,23 @@ class Food:
 
         canvas.create_oval(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=color, tag="food")
 
+def start_coundown(count):
+    if count > 0:
+        # --Delete old text and prevent overlapping
+        canvas.delete("countdown_text")
+        # -- Draw the number
+        canvas.create_text(GAME_WIDTH/2, GAME_HEIGHT/2, text=str(count), fill="white", font=("consolas", 80), tag="countdown_text")
+        # Call this function again after 1 second with count -1
+        window.after(1000, start_coundown, count - 1)
+    elif count == 0:
+        canvas.delete("countdown_text")
+        canvas.create_text(GAME_WIDTH/2, GAME_HEIGHT/2, text="GO!", fill="#22FF00", font=("consolas", 80), tag="countdown_text")
+        # Show "GO!" for half a second, then clear it and start the game
+        window.after(1000, final_start)
+
+def final_start():
+    canvas.delete("countdown_text")
+    next_turn(snake, food)
 
 def next_turn(snake, food):
     if paused:
@@ -235,7 +252,10 @@ def restart_game():
     high_score_label.config(text=f"High Score: {get_high_score()}")
     snake = Snake()
     food = Food()
-    next_turn(snake, food)
+    #next_turn(snake, food)
+    start_coundown(3)
+
+
 # --- UI SETUP ---
 window = Tk()
 dark_title_bar(window)
@@ -290,6 +310,6 @@ window.bind('<Up>', lambda event: change_direction('up'))
 window.bind('<Down>', lambda event: change_direction('down'))
 window.bind('<p>', lambda event: toggle_pause())
 
-next_turn(snake, food)
-
+#next_turn(snake, food)
+start_coundown(3)
 window.mainloop()
