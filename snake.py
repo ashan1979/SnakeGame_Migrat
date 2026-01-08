@@ -123,6 +123,12 @@ def final_start():
     canvas.delete("countdown_text")
     next_turn(snake, food)
 
+def show_speed_alert():
+    # Create the "FAST!" text in a bright color
+    canvas.create_text(GAME_WIDTH/2, 100, text="FAST!", fill="yellow", font=("consolas", 40, "bold"), tag="speed_alert")
+    # Schedule it to disappear after 500 milliseconds
+    window.after(500, lambda: canvas.delete("speed_alert"))
+
 def next_turn(snake, food):
     if paused:
         return
@@ -173,6 +179,8 @@ def next_turn(snake, food):
             save_high_scores(score)
         if current_speed > MIN_SPEED:
             current_speed -= SPEED_INCREMENT
+            # NEW: Trigger the visual alert
+            show_speed_alert()
 
         score_label.config(text=f"Score: {score}")
         canvas.delete("food")
