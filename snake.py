@@ -7,13 +7,13 @@ import ctypes
 import platform
 import os
 # Create a helper function
-def get_path(filename):
+def get_path(*path_parts):
     # Finds the Absolute path to resources, whether running as a script pr as a bundled pyInstaller executable
     if hasattr(sys, '_MEIPASS'):
         base_path = sys._MEIPASS
     else:
         base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, filename)
+    return os.path.join(base_path, *path_parts)
 
 
 def dark_title_bar(window):
@@ -43,7 +43,9 @@ def save_high_scores(new_score):
     if new_score > high_score:
         with open("highscore.txt", "w") as file:
             file.write(str(new_score))
-        high_score_label.config(text=f"high Score: {new_score}")
+        high_score_label.config(text=f"High Score: {new_score}")
+
+
 #--- CONSTANTS ---
 GAME_WIDTH = 800
 GAME_HEIGHT = 800
@@ -60,8 +62,8 @@ GOLD_COLOR = "#FFD700"
 PANEL_COLOR = "#262626"
 # -- INITIALIZE AUDIO --
 pygame.mixer.init()
-#Load reaper recordings
-#Ensure the sound files are in the same folder as the script!
+
+# Use the new get_path to point to your files
 eat_sound = pygame.mixer.Sound(get_path("eat.wav"))
 die_sound = pygame.mixer.Sound(get_path("collision.wav"))
 gold_sound = pygame.mixer.Sound(get_path("gold_apple.wav"))
@@ -90,8 +92,9 @@ class Snake:
         for i in range(0, BODY_PARTS):
             self.coordinates.append([0, 0])
 
-        for x, y in self.coordinates:
-            square = canvas.create_rectangle(x, y,x + SPACE_SIZE, y + SPACE_SIZE, fill=SNAKE_COLOR, tag="snake")
+        for i, (x, y) in enumerate(self.coordinates):
+            fill_color = "#00FBFF" if i == 0 else SNAKE_COLOR
+            square = canvas.create_rectangle(x, y,x + SPACE_SIZE, y + SPACE_SIZE, fill=fill_color, tag="snake")
             self.squares.append(square)
 
 class Food:
@@ -279,10 +282,10 @@ score_panel = Frame(window, bg=PANEL_COLOR, height=PANEL_HEIGHT)
 score_panel.pack(fill="x")
 
 score_label = Label(score_panel, text="Score: 0", font=("consolas", 20), bg=PANEL_COLOR, fg="white")
-score_label.pack(side="left", padx=30)
+score_label.pack(side="left", padx=20)
 
 high_score_label = Label(score_panel, text=f"High Score: {get_high_score()}", font=("consolas", 20), bg=PANEL_COLOR, fg="yellow")
-high_score_label.pack(side="right", padx=30)
+high_score_label.pack(side="right", padx=10)
 
 # -- GAME STATE GLOBALS
 score = 0
