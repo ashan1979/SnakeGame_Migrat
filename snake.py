@@ -1,3 +1,4 @@
+import sys
 import pygame
 import numpy as np # New
 from tkinter import *
@@ -7,8 +8,11 @@ import platform
 import os
 # Create a helper function
 def get_path(filename):
-    # This finds the absolute path to the folder where your script is
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    # Finds the Absolute path to resources, whether running as a script pr as a bundled pyInstaller executable
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, filename)
 
 
@@ -175,7 +179,6 @@ def next_turn(snake, food):
 
         current_high = get_high_score()
         if score > current_high:
-            save_high_scores(score)
             save_high_scores(score)
         if current_speed > MIN_SPEED:
             current_speed -= SPEED_INCREMENT
